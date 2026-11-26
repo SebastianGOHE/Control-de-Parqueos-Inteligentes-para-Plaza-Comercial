@@ -14,7 +14,10 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import java.awt.FlowLayout;
 
-public class Interfaz {
+import java.time.Duration;
+import java.time.LocalTime;
+
+class Interfaz {
     public static void main(String[] args) throws Exception {
 
         JFrame ventana = new JFrame("CONTROL PARQUEOS INTELIGENTE");
@@ -39,11 +42,17 @@ public class Interfaz {
         panel.add(rbAuto);
         panel.add(rbMoto);
 
-        JLabel HORAS = new JLabel("CANTIDAD DE HORAS: ");
-        JTextField campoHoras = new JTextField();
+        JLabel HoraEntrada = new JLabel("HORA DE ENTRADA: ");
+        JLabel HoraSalida = new JLabel("HORA SALIDA: ");
 
-        panel.add(HORAS);
-        panel.add(campoHoras);
+        JTextField campoHoraEntrada = new JTextField();
+        JTextField campoHoraSalida = new JTextField();
+
+        panel.add(HoraEntrada);
+        panel.add(campoHoraEntrada);
+
+        panel.add(HoraSalida);
+        panel.add(campoHoraSalida);
 
         JLabel lblTotal = new JLabel("TOTAL A PAGAR: RD$ ");
         panel.add(lblTotal);
@@ -60,28 +69,36 @@ public class Interfaz {
 
         Calcular.addActionListener(e -> {
 
-            try{
-                int horas = Integer.parseInt(campoHoras.getText().trim());
+            try {
+                LocalTime HoraE = LocalTime.parse(campoHoraEntrada.getText().trim());
+                LocalTime HoraS = LocalTime.parse(campoHoraSalida.getText().trim());
 
-                if(horas <= 0){
+                Duration tiempo = Duration.between(HoraE, HoraS);
+
+                if (tiempo.isNegative()) {
+                    tiempo = tiempo.plusDays(1);
+                }
+
+                if (tiempo.isZero()) {
                     JOptionPane.showMessageDialog(ventana, "Las horas deben ser mayores a 0.");
                     return;
                 }
 
                 double tarifa;
 
-                if(rbAuto.isSelected()){
+                if (rbAuto.isSelected()) {
                     tarifa = 50;
                 } else {
                     tarifa = 25;
                 }
 
+                double horas = tiempo.toMinutes() / 60.0;
                 double total = horas * tarifa;
-                lblTotal.setText("TOTAL A PAGAR: RD$ " + total);
+                lblTotal.setText("TOTAL A PAGAR: RD$ " + String.format("%.2f", total));
 
-            } catch (NumberFormatException ex){
-                JOptionPane.showMessageDialog(ventana, "ESCRIBA UN NUMERO VALIDO EN HORAS!");  
-                campoHoras.requestFocus();
+            } catch (java.time.format.DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(ventana, "ESCRIBA HORAS VALIDAS EN FORMATO HH:MM!");
+                campoHoraEntrada.requestFocus();
             }
         });
 

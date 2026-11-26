@@ -1,5 +1,4 @@
 
-
 abstract class Vehiculo {
     private String placa;
     private String numeroTicket;
@@ -52,6 +51,31 @@ class Auto extends Vehiculo {
     }
 
 }
+
+class TicketParqueo implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private final String id;
+    private final Vehiculo vehiculo;
+    private LocalDateTime horaEntrada;
+
+
+    public TicketParqueo(String id, Vehiculo vehiculo, LocalDateTime horaEntrada){
+        this.id = id;
+        this.vehiculo = vehiculo;
+        this.horaEntrada = horaEntrada;
+    }
+
+    public String getID(){
+        return id;
+    }
+
+    public String getVehiculo(Vehiculo vehiculo){
+        return vehiculo;
+    }
+    
+}
+
 
 
 public class App {
