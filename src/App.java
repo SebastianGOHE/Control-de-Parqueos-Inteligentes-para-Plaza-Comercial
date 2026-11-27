@@ -1,3 +1,25 @@
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import java.awt.FlowLayout;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import java.io.Serializable;
+import java.util.UUID;
+
+import java.util.*;
 
 abstract class Vehiculo {
     private String placa;
@@ -47,35 +69,114 @@ class Auto extends Vehiculo {
     @Override
 
     public double calcularTarifa(double horas){
-        return (montoBase) + (precioHora * horas);
+        return montoBase + (precioHora * horas);
     }
 
 }
 
+class Tarifa {
+
+    private double tarifaMoto = 50.0;
+    private double tarifaAuto = 75.0;
+
+    public double calcularTarifa(Vehiculo vehiculo, LocalDateTime HoraEntrada, LocalDateTime HoraSalida) throws TiempoEstacionamientoInvalido{
+
+        Duration tiempoTranscurrido = Duration.between(HoraEntrada, HoraSalida);
+
+        long minutos = tiempoTranscurrido.toMinutes();
+
+        if(minutos <= 0){
+            throw new TiempoEstacionamientoInvalido("Tiempo de estacionamiento inválido!");
+        }
+
+        long cantHoras = (minutos + 59) / 60;
+
+        return vehiculo.calcularTarifa(cantHoras);
+    }
+
+}
+
+
 class TicketParqueo implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String id;
-    private final Vehiculo vehiculo;
+    private String idTicket;
+    private Vehiculo vehiculo;
     private LocalDateTime horaEntrada;
 
 
     public TicketParqueo(String id, Vehiculo vehiculo, LocalDateTime horaEntrada){
-        this.id = id;
+        this.idTicket = UUID.randomUUID().toString();
         this.vehiculo = vehiculo;
-        this.horaEntrada = horaEntrada;
+        this.horaEntrada = LocalDateTime.now();
     }
 
     public String getID(){
-        return id;
+        return idTicket;
     }
 
-    public String getVehiculo(Vehiculo vehiculo){
+    public LocalDateTime getHoraEntrada(){
+        return horaEntrada;
+    }
+
+    public Vehiculo getVehiculo(){
         return vehiculo;
     }
     
 }
 
+class Parqueo {
+
+    private int Capacidad;
+    private int cuposDisponibles;
+
+    private ArrayList<TicketParqueo> vehiculosParqueados;
+
+    public Parqueo(int Capacidad){
+        this.Capacidad = Capacidad;
+        this.cuposDisponibles = cuposDisponibles;
+        
+        vehiculosParqueados = new ArrayList<>();
+    }
+
+    public synchronized void ingresarVehiculo(TicketParqueo ticket) throws ParqueoLlenoException {
+
+        if(cuposDisponibles <= 0){
+            throw new ParqueoLlenoException("EL PARQUE SE ENCUENTRA LLENO ACTUALMENTE!!");
+        }
+
+        vehiculosParqueados.add(ticket);
+        cuposDisponibles--;
+    }
+
+    public synchronized TicketParqueo sacarVehiculo(String idTicket){
+
+        for(TicketParqueo ticket : vehiculosParqueados){
+
+            if(ticket.getID().equals(idTicket)){
+                vehiculosParqueados.remove(ticket);
+                cuposDisponibles++;
+                return ticket;
+            }
+        }
+
+        return null;
+    }
+
+    public synchronized int getCuposDisponibles(){
+        return cuposDisponibles;
+    }
+
+    public int getCapacidad(){
+        return Capacidad;
+    }
+
+    public synchronized int getVehiculoEstacionados(){
+        return vehiculosParqueados.size();
+    }
+
+
+}
 
 
 public class App {
