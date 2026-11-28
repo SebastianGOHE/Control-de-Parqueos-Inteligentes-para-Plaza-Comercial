@@ -21,7 +21,9 @@ import java.util.UUID;
 
 import java.util.*;
 
-abstract class Vehiculo {
+abstract class Vehiculo implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private String placa;
     private String numeroTicket;
 
@@ -39,6 +41,8 @@ abstract class Vehiculo {
     }
 
     public abstract double calcularTarifa(double horas);
+    public abstract String getTipo();
+
 }
 
 class Moto extends Vehiculo {
@@ -53,6 +57,11 @@ class Moto extends Vehiculo {
     @Override 
     public double calcularTarifa(double horas){
         return (montoBase) + (precioHora * horas);
+    }
+
+    @Override
+    public String getTipo(){
+        return "MOTO";
     }
 
 }
@@ -72,6 +81,10 @@ class Auto extends Vehiculo {
         return montoBase + (precioHora * horas);
     }
 
+    @Override
+    public String getTipo(){
+        return "AUTO";
+    }
 }
 
 class Tarifa {
@@ -106,21 +119,26 @@ class TicketParqueo implements Serializable {
 
 
     public TicketParqueo(String id, Vehiculo vehiculo, LocalDateTime horaEntrada){
-        this.idTicket = UUID.randomUUID().toString();
+        this.idTicket = id;
         this.vehiculo = vehiculo;
-        this.horaEntrada = LocalDateTime.now();
+        this.horaEntrada = horaEntrada;
     }
 
     public String getID(){
         return idTicket;
     }
 
-    public LocalDateTime getHoraEntrada(){
-        return horaEntrada;
+    public String getHoraEntrada(){
+        return horaEntrada.toLocalTime().toString();
     }
 
     public Vehiculo getVehiculo(){
         return vehiculo;
+    }
+
+    public double calcularMontoPagar(LocalDateTime horaSalida) throws TiempoEstacionamientoInvalido{
+        Tarifa tarifa = new Tarifa();
+        return tarifa.calcularTarifa(vehiculo, horaEntrada, horaSalida);
     }
     
 }
@@ -128,9 +146,8 @@ class TicketParqueo implements Serializable {
 class Parqueo {
 
     private int Capacidad;
-    private int cuposDisponibles;
-
     private ArrayList<TicketParqueo> vehiculosParqueados;
+    private int cuposDisponibles;
 
     public Parqueo(int Capacidad){
         this.Capacidad = Capacidad;
@@ -173,6 +190,15 @@ class Parqueo {
 
     public synchronized int getVehiculoEstacionados(){
         return vehiculosParqueados.size();
+    }
+
+    public synchronized TicketParqueo buscarTicket(String idTicket){
+        for(TicketParqueo ticket : vehiculosParqueados){
+            if(ticket.getID().equals(idTicket)){
+                return ticket;
+            }
+        }
+        return null;
     }
 
 
